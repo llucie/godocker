@@ -8,8 +8,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Image type containing an ID, and defining JSON encoding
 type Image struct {
-	Id string `json:"id"`
+	ID string `json:"id"`
 }
 
 var images []Image
@@ -17,12 +18,10 @@ var images []Image
 // Function that will handle the POST requests made on /endpoint
 // It adds an image with input ID in the DataBase
 func postFunction(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	// Cast input request to Image
 	var image Image
 	_ = json.NewDecoder(r.Body).Decode(&image)
-	log.Println("Posting Image with ID = ", image.Id, " in my fake database")
+	log.Println("Posting Image with ID = ", image.ID, " in my fake database")
 
 	// Add it in the Database
 	images = append(images, image)
@@ -37,27 +36,22 @@ func getFunction(w http.ResponseWriter, r *http.Request) {
 	var image Image
 	_ = json.NewDecoder(r.Body).Decode(&image)
 
-	// Go through images database, and return (encode in JSON) image if present
-	found := false
+	// Go through images database, and return (encode in JSON) image
+	var result Image
 	for _, item := range images {
-		if item.Id == image.Id {
-			log.Println("Image with ID = ", image.Id, " found in database")
-			json.NewEncoder(w).Encode(item)
-			found = true
+		if item.ID == image.ID {
+			log.Println("Image with ID = ", image.ID, " found in database")
+			result = item
 			break
 		}
 	}
 
-	// Return (encode) empty image if not present in the database
-	if !found {
-		log.Println("Image with ID = ", image.Id, " not found in database")
-		json.NewEncoder(w).Encode(&Image{})
-	}
+	json.NewEncoder(w).Encode(result)
 }
 
 func main() {
 	// Initialize router
-	router := mux.NewRouter().StrictSlash(true)
+	router := mux.NewRouter()
 
 	// Set up router endpoints
 	router.Methods("POST").Path("/endpoint").HandlerFunc(postFunction)
